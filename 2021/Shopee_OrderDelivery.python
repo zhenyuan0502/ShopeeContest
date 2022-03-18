@@ -1,0 +1,91 @@
+class Warehouse:
+    def __init__(self, w, c, p):
+        self.w = w # number of item 
+        self.c = c # cost fee per km
+        self.p = p # location
+
+class Order:
+    def __init__(self, k, g):
+        self.k = k # number of ordered
+        self.g = g # city of order
+
+warehouses = {1: Warehouse(12, 5, 1), 6: Warehouse(11, 10, 6), 7: Warehouse(1, 6, 7)}
+orders = {4: Order(7, 4), 5: Order(7, 5)}
+
+
+graph = {
+  1 : [2, 3],
+  2 : [1, 3],
+  3 : [1, 2, 4, 7],
+  4 : [3, 5, 6],
+  5 : [4, 6, 7, 8],
+  6 : [5, 4],
+  7 : [3, 5, 8],
+  8 : [5, 7]
+}
+
+def bfs(graph, node): #function for BFS
+    visited = []
+    queue = [] 
+
+    visited.append(node)
+    queue.append(node)
+
+    while queue: # Creating loop to visit each node
+        m = queue.pop(0) 
+
+        for neighbour in graph[m]:
+            if neighbour not in visited:
+                visited.append(neighbour)
+                queue.append(neighbour)
+
+    return visited
+
+
+def bfs_sp(graph, start, goal):
+    visited = []
+    queue = [[start]] 
+
+    if start == goal:
+        return 0
+
+    while queue: # Creating loop to visit each node
+        path = queue.pop(0) 
+        node = path[-1]
+
+        if node not in visited:
+            neighbours = graph[node]
+             
+            # Loop to iterate over the
+            # neighbours of the node
+            for neighbour in neighbours:
+                new_path = list(path)
+                new_path.append(neighbour)
+                queue.append(new_path)
+                 
+                # Condition to check if the
+                # neighbour node is the goal
+                if neighbour == goal:
+                    # print("Shortest path = ", *new_path)
+                    return len(new_path) - 1
+            visited.append(node)
+
+    return 0
+
+delivery = {}
+
+for wh in warehouses.values():
+    for order in orders.values():
+        delivery[f'{wh.p}_{order.g}'] = bfs_sp(graph, wh.p, order.g) * wh.c
+
+total_cost = 0
+for k, v in sorted(delivery.items(), key=lambda item: item[1]):
+    splitter = k.split('_')
+    p, g = int(splitter[0]), int(splitter[1])
+
+    max_delivery_item = min(warehouses[p].w, orders[g].k)
+    warehouses[p].w -= max_delivery_item
+    orders[g].k -= max_delivery_item
+    total_cost += max_delivery_item * v
+
+print(total_cost)
